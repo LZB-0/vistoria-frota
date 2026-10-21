@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f3a5f">
+<title>Vistoria de Frota</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<section id="login" class="login-wrap">
+  <div class="login-card">
+    <div class="brand-mark">VF</div>
+    <p class="eyebrow">CONTROLE INTERNO</p>
+    <h1>Vistoria de Frota</h1>
+    <p class="muted">Entre com o e-mail e a senha cadastrados no Supabase.</p>
+    <label for="loginEmail">E-mail de acesso</label>
+    <input id="loginEmail" type="email" placeholder="seuemail@empresa.com" autocomplete="username" required>
+    <label for="loginPassword">Senha de acesso</label>
+    <input id="loginPassword" type="password" placeholder="Digite sua senha" autocomplete="current-password" required>
+    <button class="primary full" onclick="checkPassword()">Entrar</button>
+    <p id="passwordError" class="error" aria-live="polite"></p>
+    <p class="hint">Use a conta cadastrada no Supabase. Para outros usuários, crie contas no painel de autenticação.</p>
+  </div>
+</section>
+
+<div id="app" class="hidden">
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark smallmark">VF</div><div><strong>Vistoria de Frota</strong><small>Controle de veículos</small></div></div>
+    <button class="ghost" onclick="logout()">Sair</button>
+  </header>
+  <main class="container">
+    <section class="welcome">
+      <div><p class="eyebrow">PAINEL DE CONTROLE</p><h1>Visão geral da frota</h1><p class="muted">Cadastre vistorias no pátio e mantenha o controle organizado.</p></div>
+      <button class="primary" onclick="resetForm();setPage('cadastro')">＋ Nova vistoria</button>
+    </section>
+    <section class="stats">
+      <article class="stat"><span>Total de vistorias</span><strong id="statTotal">0</strong><small>Registros salvos</small></article>
+      <article class="stat"><span>Precisam de atenção</span><strong id="statRepair">0</strong><small>Reparos ou condição crítica</small></article>
+      <article class="stat"><span>Aptos para troca</span><strong id="statExchange">0</strong><small>Marcados como sim</small></article>
+      <article class="stat"><span>Não aptos para troca</span><strong id="statNotExchange">0</strong><small>Marcados como não</small></article>
+    </section>
+    <nav class="tabs">
+      <button data-page="lista" class="active" onclick="setPage('lista')">Vistorias cadastradas</button>
+      <button data-page="cadastro" onclick="resetForm();setPage('cadastro')">Nova vistoria</button>
+      <button data-page="config" onclick="setPage('config')">Configurações e backup</button>
+    </nav>
+
+    <section id="page-lista" class="page active panel">
+      <div class="panel-head"><div><h2>Base de vistorias</h2><p class="muted">Pesquise pela placa ou filtre pela decisão de troca.</p></div><button class="primary" onclick="exportCSV()">⇩ Exportar Excel/CSV</button></div>
+      <div class="filters"><input id="searchBox" placeholder="Buscar placa ou observação..."><select id="filterExchange"><option value="">Todas as decisões de troca</option><option>Sim</option><option>Não</option><option>Somente após reparos</option></select></div>
+      <div class="table-wrap"><table><thead><tr><th>Veículo / data</th><th>Estado geral</th><th>Combustível</th><th>Óleo / água / bateria</th><th>Apto para troca</th><th>Observações</th><th>Ações</th></tr></thead><tbody id="recordsBody"><tr><td colspan="7" class="empty">Nenhuma vistoria cadastrada.</td></tr></tbody></table></div>
+      <p class="hint">A exportação gera CSV com separador compatível com Excel. Os registros ficam salvos na base online compartilhada.</p>
+    </section>
+
+    <section id="page-cadastro" class="page panel">
+      <div class="panel-head"><div><h2 id="formTitle">Nova vistoria</h2><p class="muted">Preencha os campos durante a inspeção.</p></div></div>
+      <form id="inspectionForm">
+        <div class="form-grid">
+          <div class="field"><label for="plate">Placa do veículo *</label><input id="plate" required maxlength="8" placeholder="ABC1D23" autocomplete="off"></div>
+          <div class="field"><label for="visitDate">Data e hora da vistoria *</label><input id="visitDate" type="datetime-local" required></div>
+          <div class="field"><label for="inspector">Responsável pela vistoria</label><input id="inspector" placeholder="Nome de quem está vistoriando"></div>
+          <div class="field"><label for="fuel">Nível de combustível *</label><select id="fuel" required><option value="">Selecione</option><option>Reserva</option><option>1/4 de tanque</option><option>Meio tanque</option><option>3/4 de tanque</option><option>Tanque cheio</option><option>Não verificado</option></select></div>
+          <div class="field"><label for="general">Estado geral *</label><select id="general" required><option value="">Selecione</option><option>Ótimo</option><option>Bom</option><option>Mediano</option><option>Ruim</option></select><small>Mediano = apto, mas precisa de reparo.</small></div>
+          <div class="field"><label for="oil">Nível de óleo *</label><select id="oil" required><option value="">Selecione</option><option>Normal</option><option>Baixo</option><option>Muito baixo</option><option>Não verificado</option></select></div>
+          <div class="field"><label for="water">Água / líquido de arrefecimento *</label><select id="water" required><option value="">Selecione</option><option>Normal</option><option>Baixo</option><option>Muito baixo</option><option>Não verificado</option></select></div>
+          <div class="field"><label for="battery">Condição da bateria *</label><select id="battery" required><option value="">Selecione</option><option>Boa</option><option>Regular</option><option>Ruim</option><option>Não verificada</option></select></div>
+          <div class="field full-field"><label for="exchange">Está apto para troca? *</label><select id="exchange" required><option value="">Selecione</option><option>Sim</option><option>Não</option><option>Somente após reparos</option></select></div>
+          <div class="field full-field"><label for="notes">Observações / reparos necessários</label><textarea id="notes" rows="4" placeholder="Ex.: bateria fraca, pneu dianteiro precisa de troca, risco na lateral..."></textarea></div>
+        </div>
+        <div class="form-actions"><button type="button" id="cancelEdit" class="secondary hidden" onclick="resetForm()">Cancelar edição</button><button type="button" class="secondary" onclick="resetForm()">Limpar</button><button type="submit" id="saveBtn" class="primary">Salvar vistoria</button></div>
+      </form>
+    </section>
+
+    <section id="page-config" class="page panel">
+      <div class="panel-head"><div><h2>Configurações e cópia de segurança</h2><p class="muted">Mantenha uma cópia dos registros regularmente.</p></div></div>
+      <div class="config-grid">
+        <div class="config-card"><h3>Alterar senha</h3><p class="muted">Altere a senha da conta autenticada.</p><label for="newPass">Nova senha (mínimo 8 caracteres)</label><input id="newPass" type="password"><button class="primary" onclick="changePassword()">Alterar minha senha</button></div>
+        <div class="config-card"><h3>Backup dos dados</h3><p class="muted">Exporte um arquivo de segurança para guardar no notebook.</p><button class="primary" onclick="exportBackup()">⇩ Baixar backup</button><div class="spacer"></div><label for="backupFile">Restaurar backup JSON</label><input id="backupFile" type="file" accept=".json,application/json" onchange="importBackup(event)"><small>A restauração substitui os dados deste navegador.</small></div>
+      </div>
+      <div class="warning"><strong>Importante:</strong> o sistema usa uma base online protegida por login. Faça backups regularmente. A conta de acesso deve ser mantida em segurança.</div>
+    </section>
+    <footer>Controle interno de vistoria de frota · Versão inicial local</footer>
+  </main>
+</div>
+<div id="toast" class="toast" role="status"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
+
+VISTORIA DE FROTA — VERSÃO ONLINE
+
+Esta versão usa GitHub Pages para publicar o site e Supabase para login e armazenamento online.
+
+ANTES DE PUBLICAR
+1. Abra config.js em um editor de texto.
+2. Troque COLE_AQUI_A_API_URL pela API URL do seu projeto Supabase.
+3. Troque COLE_AQUI_A_PUBLISHABLE_KEY pela Publishable key do Supabase.
+4. Salve o arquivo. Use somente a Publishable key, nunca service_role ou secret key.
+
+BANCO DE DADOS
+1. No Supabase, abra SQL Editor > New query.
+2. Copie e execute o conteúdo de CONFIGURAR_BANCO.sql.
+3. A tabela precisa manter RLS ativado e políticas que permitam SELECT, INSERT, UPDATE e DELETE apenas para authenticated.
+
+LOGIN
+Use o e-mail e a senha do usuário criado em Supabase > Authentication > Users. Para adicionar usuários, crie cada usuário nessa tela. Se a confirmação de e-mail estiver ativada, confirme o usuário antes de entrar.
+
+PUBLICAÇÃO NO GITHUB
+Envie os arquivos index.html, app.js, styles.css e config.js para a raiz do repositório do GitHub. Não é necessário enviar server.py nem o arquivo .bat. Em Settings > Pages, escolha Deploy from a branch, selecione a branch principal e a pasta /(root), e salve. Aguarde o link do GitHub Pages.
+
+IMPORTANTE
+- A API URL e Publishable key são destinadas ao frontend; a proteção dos dados depende das políticas RLS. Nunca publique service_role/secret key.
+- Os usuários autenticados terão acesso aos registros da tabela.
+- A exportação é CSV compatível com Excel.
+- Faça backups periódicos.
+
+*{box-sizing:border-box} :root{--navy:#1f3a5f;--navy2:#284b75;--bg:#f3f6fa;--ink:#172334;--muted:#687789;--line:#e1e7ef;--white:#fff;--green:#18794e;--greenbg:#e5f5ec;--amber:#986000;--amberbg:#fff2d2;--red:#b42318;--redbg:#feeceb;--shadow:0 10px 30px rgba(20,42,70,.07)}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:9px;padding:11px 15px;font-weight:650;transition:.15s}button:hover{filter:brightness(.97)}.primary{background:var(--navy);color:white}.secondary{background:#edf1f6;color:#24354b}.danger{background:var(--redbg);color:var(--red)}.ghost{background:transparent;color:#fff;border:1px solid #ffffff50}.full{width:100%;margin-top:12px}.hidden{display:none!important}.login-wrap{min-height:100vh;display:grid;place-items:center;padding:22px;background:linear-gradient(140deg,#172d4a,#2c527e)}.login-card{width:min(100%,420px);background:white;border-radius:20px;padding:34px;box-shadow:0 20px 70px #0a1a2c55}.brand-mark{display:grid;place-items:center;width:58px;height:58px;border-radius:16px;background:#e8eff8;color:var(--navy);font-weight:850;font-size:22px;letter-spacing:-1px}.eyebrow{font-size:11px;font-weight:800;letter-spacing:1.6px;color:#59718c;margin:22px 0 6px}.login-card h1,.welcome h1{margin:0;font-size:29px;letter-spacing:-.8px}.muted{color:var(--muted);margin-top:6px}.login-card label,.field label,.config-card label{display:block;font-weight:650;font-size:13px;margin:16px 0 7px}input,select,textarea{width:100%;border:1px solid #ccd6e2;background:#fff;color:var(--ink);border-radius:9px;padding:12px 13px;outline:none;min-width:0}input:focus,select:focus,textarea:focus{border-color:#527ca8;box-shadow:0 0 0 3px #dce9f7}textarea{resize:vertical}.error{color:var(--red);font-size:13px;min-height:16px}.hint{font-size:12px;color:var(--muted);margin-top:18px}.topbar{background:var(--navy);color:white;padding:14px max(20px,calc((100% - 1240px)/2));display:flex;justify-content:space-between;align-items:center;gap:16px}.brand{display:flex;align-items:center;gap:11px}.brand strong,.brand small{display:block}.brand small{font-size:12px;color:#d5e1ee;margin-top:2px}.smallmark{width:42px;height:42px;background:#fff;color:var(--navy);border-radius:12px;font-size:17px}.container{max-width:1240px;margin:0 auto;padding:28px 22px 45px}.welcome{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:22px}.welcome .eyebrow{margin-top:0}.welcome h1{font-size:28px}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:24px}.stat{background:white;border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow)}.stat span,.stat small{display:block;color:var(--muted);font-size:12px}.stat strong{display:block;font-size:29px;margin:6px 0;letter-spacing:-.6px}.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:18px;overflow-x:auto}.tabs button{background:transparent;color:var(--muted);white-space:nowrap;border-radius:9px 9px 0 0;border-bottom:3px solid transparent}.tabs button.active{color:var(--navy);border-bottom-color:var(--navy)}.page{display:none}.page.active{display:block}.panel{background:white;border:1px solid var(--line);border-radius:15px;padding:23px;box-shadow:var(--shadow)}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:18px}.panel h2{font-size:21px;margin:0;letter-spacing:-.4px}.panel-head p{margin-bottom:0;font-size:13px}.filters{display:flex;gap:10px;margin-bottom:15px}.filters input{flex:1}.filters select{max-width:260px}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px}table{width:100%;border-collapse:collapse;min-width:950px;font-size:13px}th{text-align:left;background:#f7f9fc;color:#526175;font-size:11px;text-transform:uppercase;letter-spacing:.4px;padding:13px 12px;white-space:nowrap}td{padding:13px 12px;border-top:1px solid var(--line);vertical-align:top}td strong,td small{display:block}td small{color:var(--muted);font-size:11px;margin-top:4px}.pill{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:750;white-space:nowrap}.good{background:var(--greenbg);color:var(--green)}.warn{background:var(--amberbg);color:var(--amber)}.bad{background:var(--redbg);color:var(--red)}.neutral{background:#edf1f5;color:#566578}.actions{white-space:nowrap}.small{padding:7px 9px;font-size:11px;margin-right:5px}.empty{text-align:center;color:var(--muted);padding:35px}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 18px}.field{min-width:0}.field label{margin-top:13px}.field small,.config-card small{display:block;font-size:11px;color:var(--muted);margin-top:6px}.full-field{grid-column:1/-1}.form-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:24px;padding-top:18px;border-top:1px solid var(--line)}.config-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.config-card{border:1px solid var(--line);border-radius:12px;padding:18px}.config-card h3{margin:0}.config-card p{font-size:13px}.config-card button{margin-top:15px}.spacer{height:12px}.warning{margin-top:20px;background:#fff7e6;border:1px solid #f2dfb1;border-radius:10px;padding:15px;font-size:13px;color:#6d4c08}footer{text-align:center;color:#8a96a5;font-size:12px;padding:28px 0 0}.toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#172334;color:white;border-radius:10px;padding:12px 18px;box-shadow:var(--shadow);transition:.2s;z-index:10;max-width:90vw;text-align:center}.toast.show{opacity:1;transform:translate(-50%,0)}@media(max-width:850px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.panel{padding:16px}.panel-head{align-items:flex-start;flex-direction:column}.panel-head button{width:100%}.config-grid{grid-template-columns:1fr}}@media(max-width:560px){.container{padding:20px 12px 30px}.welcome{align-items:stretch;flex-direction:column}.welcome h1{font-size:25px}.welcome>.primary{width:100%}.stats{gap:9px}.stat{padding:13px}.stat strong{font-size:25px}.stat span{font-size:11px}.tabs{margin-right:-12px}.filters{flex-direction:column}.filters select{max-width:none}.form-grid{grid-template-columns:1fr}.full-field{grid-column:auto}.form-actions{flex-wrap:wrap}.form-actions button{flex:1}.login-card{padding:27px 22px}}
+
+let records = [];
+let editingId = null;
+let supabaseClient = null;
+function escapeHtml(value) { return String(value ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function fmtDate(value) { if(!value)return ""; const d=new Date(value); return Number.isNaN(d.getTime())?value:d.toLocaleString("pt-BR"); }
+function currentLocalDateTime(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16);}
+function showToast(msg){const el=document.getElementById("toast");el.textContent=msg;el.classList.add("show");setTimeout(()=>el.classList.remove("show"),2800);}
+function dbRowToRecord(r){return {id:r.id,plate:r.placa,date:r.data_vistoria,inspector:r.responsavel||"",fuel:r.nivel_combustivel||"",general:r.estado_geral||"",oil:r.oleo||"",water:r.agua||"",battery:r.bateria||"",exchange_status:r.situacao_troca|| (r.apto_troca===true?"Sim":r.apto_troca===false?"Não":""),notes:r.observacoes||""};}
+function recordToDb(r){return {placa:r.plate,data_vistoria:new Date(r.date).toISOString(),responsavel:r.inspector,nivel_combustivel:r.fuel,estado_geral:r.general,oleo:r.oil,agua:r.water,bateria:r.battery,situacao_troca:r.exchange_status,apto_troca:r.exchange_status==="Sim",observacoes:r.notes};}
+function requireClient(){if(!window.supabase||!window.SUPABASE_URL||!window.SUPABASE_ANON_KEY||window.SUPABASE_URL.includes("COLE_AQUI")||window.SUPABASE_ANON_KEY.includes("COLE_AQUI")) throw new Error("Falta configurar a API URL e a Publishable key no arquivo config.js."); if(!supabaseClient)supabaseClient=window.supabase.createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY); return supabaseClient;}
+async function checkPassword(){try{const sb=requireClient();const email=document.getElementById("loginEmail").value.trim();const password=document.getElementById("loginPassword").value;const {error}=await sb.auth.signInWithPassword({email,password});if(error)throw error;document.getElementById("login").classList.add("hidden");document.getElementById("app").classList.remove("hidden");document.getElementById("passwordError").textContent="";await initializeApp();}catch(e){document.getElementById("passwordError").textContent=e.message||"Não foi possível entrar.";}}
+async function initializeApp(){document.getElementById("visitDate").value=currentLocalDateTime();await refreshRecords();}
+async function refreshRecords(){const sb=requireClient();const {data,error}=await sb.from("vistorias").select("*").order("data_vistoria",{ascending:false});if(error)throw error;records=(data||[]).map(dbRowToRecord);renderRecords();renderStats();}
+function setPage(page){document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id===`page-${page}`));document.querySelectorAll("[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===page));if(page==="lista")renderRecords();if(page==="cadastro")document.getElementById("plate").focus();}
+function resetForm(){editingId=null;document.getElementById("inspectionForm").reset();document.getElementById("visitDate").value=currentLocalDateTime();document.getElementById("formTitle").textContent="Nova vistoria";document.getElementById("saveBtn").textContent="Salvar vistoria";document.getElementById("cancelEdit").classList.add("hidden");}
+async function submitInspection(event){event.preventDefault();const r={plate:document.getElementById("plate").value.trim().toUpperCase().replace(/\s+/g,""),date:document.getElementById("visitDate").value||currentLocalDateTime(),inspector:document.getElementById("inspector").value.trim(),fuel:document.getElementById("fuel").value,general:document.getElementById("general").value,oil:document.getElementById("oil").value,water:document.getElementById("water").value,battery:document.getElementById("battery").value,exchange_status:document.getElementById("exchange").value,notes:document.getElementById("notes").value.trim()};try{const sb=requireClient();let q=sb.from("vistorias");q=editingId?q.update(recordToDb(r)).eq("id",editingId):q.insert(recordToDb(r));const {error}=await q;if(error)throw error;const wasEditing=editingId!==null;await refreshRecords();resetForm();setPage("lista");showToast(wasEditing?"Vistoria atualizada.":"Vistoria salva na base online.");}catch(e){showToast(e.message||"Não foi possível salvar.");}}
+function editRecord(id){const r=records.find(x=>String(x.id)===String(id));if(!r)return;editingId=id;setPage("cadastro");for(const [el,key] of [["plate","plate"],["visitDate","date"],["inspector","inspector"],["fuel","fuel"],["general","general"],["oil","oil"],["water","water"],["battery","battery"],["exchange","exchange_status"],["notes","notes"]]){let v=r[key]||"";if(el==="visitDate"&&v){const d=new Date(v);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());v=d.toISOString().slice(0,16);}document.getElementById(el).value=v;}document.getElementById("formTitle").textContent=`Editar vistoria — ${r.plate}`;document.getElementById("saveBtn").textContent="Salvar alterações";document.getElementById("cancelEdit").classList.remove("hidden");}
+async function deleteRecord(id){const r=records.find(x=>String(x.id)===String(id));if(!r||!confirm(`Excluir a vistoria da placa ${r.plate}?`))return;try{const {error}=await requireClient().from("vistorias").delete().eq("id",id);if(error)throw error;await refreshRecords();showToast("Registro excluído.");}catch(e){showToast(e.message||"Não foi possível excluir.");}}
+function renderStats(){document.getElementById("statTotal").textContent=records.length;document.getElementById("statRepair").textContent=records.filter(r=>["Mediano","Ruim"].includes(r.general)||r.exchange_status==="Somente após reparos"||["Baixo","Muito baixo"].includes(r.oil)||["Baixo","Muito baixo"].includes(r.water)||r.battery==="Ruim").length;document.getElementById("statExchange").textContent=records.filter(r=>r.exchange_status==="Sim").length;document.getElementById("statNotExchange").textContent=records.filter(r=>r.exchange_status==="Não").length;}
+function statusClass(v){return({"Ótimo":"good","Bom":"good","Mediano":"warn","Ruim":"bad","Sim":"good","Não":"bad","Somente após reparos":"warn"})[v]||"neutral";}
+function renderRecords(){const q=(document.getElementById("searchBox")?.value||"").trim().toUpperCase(),filter=document.getElementById("filterExchange")?.value||"",list=records.filter(r=>(!q||r.plate.includes(q)||(r.notes||"").toUpperCase().includes(q))&&(!filter||r.exchange_status===filter)),tbody=document.getElementById("recordsBody");if(!list.length){tbody.innerHTML='<tr><td colspan="7" class="empty">Nenhuma vistoria encontrada.</td></tr>';return;}tbody.innerHTML=list.map(r=>`<tr><td><strong>${escapeHtml(r.plate)}</strong><small>${escapeHtml(fmtDate(r.date))}</small></td><td><span class="pill ${statusClass(r.general)}">${escapeHtml(r.general||"—")}</span></td><td>${escapeHtml(r.fuel||"—")}</td><td>${escapeHtml(r.oil||"—")} / ${escapeHtml(r.water||"—")} / ${escapeHtml(r.battery||"—")}</td><td><span class="pill ${statusClass(r.exchange_status)}">${escapeHtml(r.exchange_status||"—")}</span></td><td>${escapeHtml(r.notes||"—")}</td><td class="actions"><button class="small secondary" onclick="editRecord('${r.id}')">Editar</button><button class="small danger" onclick="deleteRecord('${r.id}')">Excluir</button></td></tr>`).join("");}
+function csvCell(v){return '"'+String(v??"").replace(/"/g,'""')+'"';}
+function exportCSV(){const headers=["ID","Placa","Data e hora","Responsável","Combustível","Estado geral","Óleo","Água","Bateria","Apto para troca","Observações"];const rows=records.map(r=>[r.id,r.plate,r.date,r.inspector,r.fuel,r.general,r.oil,r.water,r.battery,r.exchange_status,r.notes]);const csv='\ufeff'+[headers,...rows].map(row=>row.map(csvCell).join(';')).join('\r\n');downloadBlob(csv,"vistorias_frota.csv","text/csv;charset=utf-8");}
+function downloadBlob(content,name,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);}
+function exportBackup(){downloadBlob(JSON.stringify({version:1,exportedAt:new Date().toISOString(),records},null,2),"backup_vistoria_frota.json","application/json");}
+async function importBackup(event){const file=event.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text());if(!Array.isArray(data.records))throw new Error("Arquivo não reconhecido.");if(!confirm(`Importar ${data.records.length} registros para a base online? Os registros com os mesmos IDs poderão ser atualizados.`))return;const sb=requireClient();const rows=data.records.map(r=>({...recordToDb(r),...(Number.isFinite(Number(r.id))?{id:Number(r.id)}:{})}));const {error}=await sb.from("vistorias").upsert(rows);if(error)throw error;await refreshRecords();showToast("Backup importado.");}catch(e){showToast(e.message||"Não foi possível importar o backup.");}event.target.value="";}
+async function changePassword(){try{const password=document.getElementById("newPass").value;if(password.length<8)throw new Error("A nova senha deve ter pelo menos 8 caracteres.");const {error}=await requireClient().auth.updateUser({password});if(error)throw error;document.getElementById("newPass").value="";showToast("Senha alterada.");}catch(e){showToast(e.message||"Não foi possível alterar a senha.");}}
+async function logout(){try{await requireClient().auth.signOut();}catch{}document.getElementById("app").classList.add("hidden");document.getElementById("login").classList.remove("hidden");document.getElementById("loginPassword").value="";}
+window.addEventListener("DOMContentLoaded",async()=>{document.getElementById("loginPassword").addEventListener("keydown",e=>{if(e.key==="Enter")checkPassword();});document.getElementById("loginEmail").addEventListener("keydown",e=>{if(e.key==="Enter")checkPassword();});document.getElementById("inspectionForm").addEventListener("submit",submitInspection);document.getElementById("searchBox").addEventListener("input",renderRecords);document.getElementById("filterExchange").addEventListener("change",renderRecords);try{requireClient();const {data:{session}}=await supabaseClient.auth.getSession();if(session){document.getElementById("login").classList.add("hidden");document.getElementById("app").classList.remove("hidden");await initializeApp();}}catch(e){document.getElementById("passwordError").textContent=e.message||"Configure o arquivo config.js.";}});
+
+// Configure estes dois valores antes de publicar o site.
+// Use a Project URL e a Publishable key do Supabase. Nunca coloque aqui service_role/secret key.
+window.SUPABASE_URL = "https://ohqjtrzhpvluhirkgple.supabase.co/rest/v1/";
+window.SUPABASE_ANON_KEY = "sb_publishable_8KYmZai-DJD0wXIzHtcyUw_XaJjzO6z";
+
+-- Execute este SQL no Supabase > SQL Editor > New query.
+-- Ele acrescenta os campos usados pelo site à tabela public.vistorias já criada.
+alter table public.vistorias
+  add column if not exists data_vistoria timestamptz not null default now(),
+  add column if not exists responsavel text,
+  add column if not exists situacao_troca text;
+
+-- As políticas existentes devem restringir leitura e alterações a usuários autenticados.
+-- Se você já executou as políticas da etapa anterior, não precisa recriá-las.
