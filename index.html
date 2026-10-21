@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1f3a5f">
+<title>Vistoria de Frota</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<section id="login" class="login-wrap">
+  <div class="login-card">
+    <div class="brand-mark">VF</div>
+    <p class="eyebrow">CONTROLE INTERNO</p>
+    <h1>Vistoria de Frota</h1>
+    <p class="muted">Entre com o e-mail e a senha cadastrados no Supabase.</p>
+    <label for="loginEmail">E-mail de acesso</label>
+    <input id="loginEmail" type="email" placeholder="seuemail@empresa.com" autocomplete="username" required>
+    <label for="loginPassword">Senha de acesso</label>
+    <input id="loginPassword" type="password" placeholder="Digite sua senha" autocomplete="current-password" required>
+    <button class="primary full" onclick="checkPassword()">Entrar</button>
+    <p id="passwordError" class="error" aria-live="polite"></p>
+    <p class="hint">Use a conta cadastrada no Supabase. Para outros usuários, crie contas no painel de autenticação.</p>
+  </div>
+</section>
+
+<div id="app" class="hidden">
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark smallmark">VF</div><div><strong>Vistoria de Frota</strong><small>Controle de veículos</small></div></div>
+    <button class="ghost" onclick="logout()">Sair</button>
+  </header>
+  <main class="container">
+    <section class="welcome">
+      <div><p class="eyebrow">PAINEL DE CONTROLE</p><h1>Visão geral da frota</h1><p class="muted">Cadastre vistorias no pátio e mantenha o controle organizado.</p></div>
+      <button class="primary" onclick="resetForm();setPage('cadastro')">＋ Nova vistoria</button>
+    </section>
+    <section class="stats">
+      <article class="stat"><span>Total de vistorias</span><strong id="statTotal">0</strong><small>Registros salvos</small></article>
+      <article class="stat"><span>Precisam de atenção</span><strong id="statRepair">0</strong><small>Reparos ou condição crítica</small></article>
+      <article class="stat"><span>Aptos para troca</span><strong id="statExchange">0</strong><small>Marcados como sim</small></article>
+      <article class="stat"><span>Não aptos para troca</span><strong id="statNotExchange">0</strong><small>Marcados como não</small></article>
+    </section>
+    <nav class="tabs">
+      <button data-page="lista" class="active" onclick="setPage('lista')">Vistorias cadastradas</button>
+      <button data-page="cadastro" onclick="resetForm();setPage('cadastro')">Nova vistoria</button>
+      <button data-page="config" onclick="setPage('config')">Configurações e backup</button>
+    </nav>
+
+    <section id="page-lista" class="page active panel">
+      <div class="panel-head"><div><h2>Base de vistorias</h2><p class="muted">Pesquise pela placa ou filtre pela decisão de troca.</p></div><button class="primary" onclick="exportCSV()">⇩ Exportar Excel/CSV</button></div>
+      <div class="filters"><input id="searchBox" placeholder="Buscar placa ou observação..."><select id="filterExchange"><option value="">Todas as decisões de troca</option><option>Sim</option><option>Não</option><option>Somente após reparos</option></select></div>
+      <div class="table-wrap"><table><thead><tr><th>Veículo / data</th><th>Estado geral</th><th>Combustível</th><th>Óleo / água / bateria</th><th>Apto para troca</th><th>Observações</th><th>Ações</th></tr></thead><tbody id="recordsBody"><tr><td colspan="7" class="empty">Nenhuma vistoria cadastrada.</td></tr></tbody></table></div>
+      <p class="hint">A exportação gera CSV com separador compatível com Excel. Os registros ficam salvos na base online compartilhada.</p>
+    </section>
+
+    <section id="page-cadastro" class="page panel">
+      <div class="panel-head"><div><h2 id="formTitle">Nova vistoria</h2><p class="muted">Preencha os campos durante a inspeção.</p></div></div>
+      <form id="inspectionForm">
+        <div class="form-grid">
+          <div class="field"><label for="plate">Placa do veículo *</label><input id="plate" required maxlength="8" placeholder="ABC1D23" autocomplete="off"></div>
+          <div class="field"><label for="visitDate">Data e hora da vistoria *</label><input id="visitDate" type="datetime-local" required></div>
+          <div class="field"><label for="inspector">Responsável pela vistoria</label><input id="inspector" placeholder="Nome de quem está vistoriando"></div>
+          <div class="field"><label for="fuel">Nível de combustível *</label><select id="fuel" required><option value="">Selecione</option><option>Reserva</option><option>1/4 de tanque</option><option>Meio tanque</option><option>3/4 de tanque</option><option>Tanque cheio</option><option>Não verificado</option></select></div>
+          <div class="field"><label for="general">Estado geral *</label><select id="general" required><option value="">Selecione</option><option>Ótimo</option><option>Bom</option><option>Mediano</option><option>Ruim</option></select><small>Mediano = apto, mas precisa de reparo.</small></div>
+          <div class="field"><label for="oil">Nível de óleo *</label><select id="oil" required><option value="">Selecione</option><option>Normal</option><option>Baixo</option><option>Muito baixo</option><option>Não verificado</option></select></div>
+          <div class="field"><label for="water">Água / líquido de arrefecimento *</label><select id="water" required><option value="">Selecione</option><option>Normal</option><option>Baixo</option><option>Muito baixo</option><option>Não verificado</option></select></div>
+          <div class="field"><label for="battery">Condição da bateria *</label><select id="battery" required><option value="">Selecione</option><option>Boa</option><option>Regular</option><option>Ruim</option><option>Não verificada</option></select></div>
+          <div class="field full-field"><label for="exchange">Está apto para troca? *</label><select id="exchange" required><option value="">Selecione</option><option>Sim</option><option>Não</option><option>Somente após reparos</option></select></div>
+          <div class="field full-field"><label for="notes">Observações / reparos necessários</label><textarea id="notes" rows="4" placeholder="Ex.: bateria fraca, pneu dianteiro precisa de troca, risco na lateral..."></textarea></div>
+        </div>
+        <div class="form-actions"><button type="button" id="cancelEdit" class="secondary hidden" onclick="resetForm()">Cancelar edição</button><button type="button" class="secondary" onclick="resetForm()">Limpar</button><button type="submit" id="saveBtn" class="primary">Salvar vistoria</button></div>
+      </form>
+    </section>
+
+    <section id="page-config" class="page panel">
+      <div class="panel-head"><div><h2>Configurações e cópia de segurança</h2><p class="muted">Mantenha uma cópia dos registros regularmente.</p></div></div>
+      <div class="config-grid">
+        <div class="config-card"><h3>Alterar senha</h3><p class="muted">Altere a senha da conta autenticada.</p><label for="newPass">Nova senha (mínimo 8 caracteres)</label><input id="newPass" type="password"><button class="primary" onclick="changePassword()">Alterar minha senha</button></div>
+        <div class="config-card"><h3>Backup dos dados</h3><p class="muted">Exporte um arquivo de segurança para guardar no notebook.</p><button class="primary" onclick="exportBackup()">⇩ Baixar backup</button><div class="spacer"></div><label for="backupFile">Restaurar backup JSON</label><input id="backupFile" type="file" accept=".json,application/json" onchange="importBackup(event)"><small>A restauração substitui os dados deste navegador.</small></div>
+      </div>
+      <div class="warning"><strong>Importante:</strong> o sistema usa uma base online protegida por login. Faça backups regularmente. A conta de acesso deve ser mantida em segurança.</div>
+    </section>
+    <footer>Controle interno de vistoria de frota · Versão inicial local</footer>
+  </main>
+</div>
+<div id="toast" class="toast" role="status"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

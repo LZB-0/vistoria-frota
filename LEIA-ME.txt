@@ -1,0 +1,26 @@
+VISTORIA DE FROTA — VERSÃO ONLINE
+
+Esta versão usa GitHub Pages para publicar o site e Supabase para login e armazenamento online.
+
+ANTES DE PUBLICAR
+1. Abra config.js em um editor de texto.
+2. Troque COLE_AQUI_A_API_URL pela API URL do seu projeto Supabase.
+3. Troque COLE_AQUI_A_PUBLISHABLE_KEY pela Publishable key do Supabase.
+4. Salve o arquivo. Use somente a Publishable key, nunca service_role ou secret key.
+
+BANCO DE DADOS
+1. No Supabase, abra SQL Editor > New query.
+2. Copie e execute o conteúdo de CONFIGURAR_BANCO.sql.
+3. A tabela precisa manter RLS ativado e políticas que permitam SELECT, INSERT, UPDATE e DELETE apenas para authenticated.
+
+LOGIN
+Use o e-mail e a senha do usuário criado em Supabase > Authentication > Users. Para adicionar usuários, crie cada usuário nessa tela. Se a confirmação de e-mail estiver ativada, confirme o usuário antes de entrar.
+
+PUBLICAÇÃO NO GITHUB
+Envie os arquivos index.html, app.js, styles.css e config.js para a raiz do repositório do GitHub. Não é necessário enviar server.py nem o arquivo .bat. Em Settings > Pages, escolha Deploy from a branch, selecione a branch principal e a pasta /(root), e salve. Aguarde o link do GitHub Pages.
+
+IMPORTANTE
+- A API URL e Publishable key são destinadas ao frontend; a proteção dos dados depende das políticas RLS. Nunca publique service_role/secret key.
+- Os usuários autenticados terão acesso aos registros da tabela.
+- A exportação é CSV compatível com Excel.
+- Faça backups periódicos.
